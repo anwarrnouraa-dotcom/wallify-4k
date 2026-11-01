@@ -1,5 +1,5 @@
 name: wallify_4k
-description: Wallify 4K Wallpapers
+description: Wallify 4K - 45 HD Wallpapers App
 publish_to: 'none'
 version: 1.0.0+1
 
@@ -9,14 +9,17 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  async_wallpaper: ^1.0.3
-  path_provider: ^2.1.2
-  permission_handler: ^11.3.0
+  cupertino_icons: ^1.0.5
+  async_wallpaper: ^3.6.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
 
 flutter:
   uses-material-design: true
   assets:
-    - assets/
     - assets/nature/
     - assets/animals/
     - assets/persons/
