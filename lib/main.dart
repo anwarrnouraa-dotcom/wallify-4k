@@ -1,87 +1,113 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:async_wallpaper/async_wallpaper.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:wallpaper_manager_flutter/wallpaper_manager_flutter.dart';
 
-void main()=>runApp(const WallifyApp());
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(const MyApp());
+}
 
-class WallifyApp extends StatelessWidget{
-  const WallifyApp({super.key});
-  @override Widget build(BuildContext c){
-    return MaterialApp(debugShowCheckedModeBanner:false, theme:ThemeData.dark().copyWith(scaffoldBackgroundColor:const Color(0xFF0A0A0A)), home:const HomeScreen());
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: 'Wallify 4K',
+      theme: ThemeData.dark(),
+      home: const HomeScreen(),
+    );
   }
 }
 
-class HomeScreen extends StatelessWidget{
+class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
-  final categories=const[
-    {"name":"طبيعة","en":"nature","icon":"🌿","color":0xFF2E7D32},
-    {"name":"حيوانات","en":"animals","icon":"🦁","color":0xFFFF6F00},
-    {"name":"أشخاص","en":"persons","icon":"🔥","color":0xFFC62828},
-    {"name":"سيارات","en":"cars","icon":"🏎️","color":0xFF1565C0},
+
+  final List<Map<String, dynamic>> categories = const [
+    {"name": "Nature", "count": 9, "color": Colors.green, "icon": Icons.eco, "folder": "nature"},
+    {"name": "Animals", "count": 17, "color": Colors.orange, "icon": Icons.pets, "folder": "animals"},
+    {"name": "Persons", "count": 14, "color": Colors.red, "icon": Icons.person, "folder": "persons"},
+    {"name": "Cars", "count": 5, "color": Colors.blue, "icon": Icons.directions_car, "folder": "cars"},
   ];
-  @override Widget build(BuildContext context){
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
-      appBar:AppBar(title:const Text('Wallify 4K - Auto'),centerTitle:true),
-      body:GridView.builder(
-        padding:const EdgeInsets.all(16),
-        gridDelegate:const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount:2,crossAxisSpacing:16,mainAxisSpacing:16,childAspectRatio:0.85),
-        itemCount:categories.length,
-        itemBuilder:(c,i){
-          final cat=categories[i];
-          return FutureBuilder<List<String>>(
-            future: _getAssets(cat['en'] as String),
-            builder: (context,snap){
-              final count = snap.data?.length ?? 0;
-              return GestureDetector(
-                onTap:()=>Navigator.push(c,MaterialPageRoute(builder:(_)=>CategoryScreen(category:cat['en'] as String,title:cat['name'] as String))),
-                child:Container(decoration:BoxDecoration(color:Color(cat['color'] as int).withOpacity(0.3),borderRadius:BorderRadius.circular(20),border:Border.all(color:Color(cat['color'] as int))),
-                  child:Column(mainAxisAlignment:MainAxisAlignment.center,children:[
-                    Text(cat['icon'] as String,style:const TextStyle(fontSize:50)),
-                    Text(cat['name'] as String,style:const TextStyle(fontWeight:FontWeight.bold,fontSize:18)),
-                    Text(snap.hasData ? '$count صور' : '...', style:const TextStyle(color:Colors.white70)),
-                  ]),
-                ),
-              );
-            }
-          );
-        },
+      appBar: AppBar(title: const Text('Wallify 4K'), centerTitle: true),
+      body: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Choose a category', style: TextStyle(fontSize: 18, color: Colors.white70)),
+            const SizedBox(height: 16),
+            Expanded(
+              child: GridView.builder(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2, crossAxisSpacing: 12, mainAxisSpacing: 12),
+                itemCount: categories.length,
+                itemBuilder: (context, index) {
+                  final cat = categories[index];
+                  return GestureDetector(
+                    onTap: () {
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => CategoryScreen(category: cat)));
+                    },
+                    child: Container(
+                      decoration: BoxDecoration(color: const Color(0xFF1E1E2F), borderRadius: BorderRadius.circular(20)),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(20),
+                            decoration: BoxDecoration(color: cat['color'], borderRadius: BorderRadius.circular(16)),
+                            child: Icon(cat['icon'], size: 40, color: Colors.white),
+                          ),
+                          const SizedBox(height: 12),
+                          Text(cat['name'], style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                          const SizedBox(height: 4),
+                          Text('${cat['count']} images', style: const TextStyle(color: Colors.white54)),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
-  static Future<List<String>> _getAssets(String folder) async {
-    final manifest = await AssetManifest.loadFromAssetBundle(rootBundle);
-    return manifest.listAssets().where((e)=>e.startsWith('assets/$folder/')).toList();
-  }
 }
 
-class CategoryScreen extends StatelessWidget{
-  final String category,title;
-  const CategoryScreen({super.key,required this.category,required this.title});
+class CategoryScreen extends StatelessWidget {
+  final Map<String, dynamic> category;
+  const CategoryScreen({super.key, required this.category});
 
-  Future<List<String>> _loadImages() async {
-    final manifest = await AssetManifest.loadFromAssetBundle(rootBundle);
-    final list = manifest.listAssets().where((p)=>p.startsWith('assets/$category/')).toList();
-    list.sort();
-    return list;
+  List<String> getImages() {
+    int count = category['count'];
+    String folder = category['folder'];
+    return List.generate(count, (i) => 'assets/$folder/${i+1}.jpg');
   }
 
-  @override Widget build(BuildContext context){
+  @override
+  Widget build(BuildContext context) {
+    final images = getImages();
     return Scaffold(
-      appBar:AppBar(title:Text(title)),
-      body:FutureBuilder<List<String>>(
-        future:_loadImages(),
-        builder:(c,snap){
-          if(!snap.hasData) return const Center(child:CircularProgressIndicator());
-          final imgs=snap.data!;
-          return GridView.builder(
-            padding:const EdgeInsets.all(10),
-            gridDelegate:const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount:2,crossAxisSpacing:10,mainAxisSpacing:10,childAspectRatio:0.6),
-            itemCount:imgs.length,
-            itemBuilder:(c,i)=>GestureDetector(
-              onTap:()=>Navigator.push(c,MaterialPageRoute(builder:(_)=>ViewScreen(path:imgs[i]))),
-              child:Hero(tag:imgs[i], child:ClipRRect(borderRadius:BorderRadius.circular(15),child:Image.asset(imgs[i],fit:BoxFit.cover))),
+      appBar: AppBar(title: Text(category['name'])),
+      body: GridView.builder(
+        padding: const EdgeInsets.all(10),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2, crossAxisSpacing: 10, mainAxisSpacing: 10, childAspectRatio: 0.7),
+        itemCount: images.length,
+        itemBuilder: (context, index) {
+          return GestureDetector(
+            onTap: () {
+              Navigator.push(context, MaterialPageRoute(builder: (_) => ViewScreen(imagePath: images[index])));
+            },
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(15),
+              child: Image.asset(images[index], fit: BoxFit.cover),
             ),
           );
         },
@@ -90,40 +116,66 @@ class CategoryScreen extends StatelessWidget{
   }
 }
 
-class ViewScreen extends StatefulWidget{
-  final String path;
-  const ViewScreen({super.key,required this.path});
-  @override State<ViewScreen> createState()=>_ViewScreenState();
+class ViewScreen extends StatefulWidget {
+  final String imagePath;
+  const ViewScreen({super.key, required this.imagePath});
+
+  @override
+  State<ViewScreen> createState() => _ViewScreenState();
 }
 
-class _ViewScreenState extends State<ViewScreen>{
-  bool load=false;
-  Future<void> setWall(int type) async{
-    setState(()=>load=true);
-    try{
-      final data=await rootBundle.load(widget.path);
-      final dir=await getTemporaryDirectory();
-      final file=File('${dir.path}/wall.jpg');
-      await file.writeAsBytes(data.buffer.asUint8List());
-      await WallpaperManagerFlutter().setwallpaperfromFile(file,type);
-      if(mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('تم ✅')));
-    }catch(e){ if(mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('$e'))); }
-    setState(()=>load=false);
+class _ViewScreenState extends State<ViewScreen> {
+  bool isLoading = false;
+
+  Future<void> setWallpaper() async {
+    setState(() => isLoading = true);
+    try {
+      final byteData = await rootBundle.load(widget.imagePath);
+      final tempDir = await getTemporaryDirectory();
+      final file = await File('${tempDir.path}/temp_wallpaper.jpg').create();
+      await file.writeAsBytes(byteData.buffer.asUint8List());
+
+      bool result = await AsyncWallpaper.setWallpaperFromFile(
+        filePath: file.path,
+        wallpaperLocation: AsyncWallpaper.HOME_SCREEN,
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(result ? 'Wallpaper Set Successfully!' : 'Failed to set wallpaper')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
+    }
+    setState(() => isLoading = false);
   }
-  @override Widget build(BuildContext context){
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
-      body:Stack(children:[
-        Hero(tag:widget.path, child:SizedBox.expand(child:Image.asset(widget.path,fit:BoxFit.cover))),
-        Positioned(top:40,left:15,child:CircleAvatar(backgroundColor:Colors.black54, child:IconButton(icon:const Icon(Icons.arrow_back,color:Colors.white),onPressed:()=>Navigator.pop(context)))),
-        if(load) const Center(child:CircularProgressIndicator()),
-        Positioned(bottom:30,left:15,right:15,child:Row(children:[
-          Expanded(child:ElevatedButton(onPressed:()=>setWall(1),child:const Text('الرئيسية'))),
-          const SizedBox(width:8),
-          Expanded(child:ElevatedButton(onPressed:()=>setWall(2),child:const Text('القفل'))),
-          const SizedBox(width:8),
-          Expanded(child:ElevatedButton(onPressed:()=>setWall(3),child:const Text('الكل'))),
-        ])),
-      ]),
+      body: Stack(
+        children: [
+          SizedBox.expand(child: Image.asset(widget.imagePath, fit: BoxFit.cover)),
+          Positioned(
+            top: 40, left: 10,
+            child: CircleAvatar(
+              backgroundColor: Colors.black54,
+              child: IconButton(icon: const Icon(Icons.arrow_back, color: Colors.white), onPressed: () => Navigator.pop(context)),
+            ),
+          ),
+          Positioned(
+            bottom: 30, left: 20, right: 20,
+            child: ElevatedButton(
+              onPressed: isLoading ? null : setWallpaper,
+              style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16), backgroundColor: Colors.blue),
+              child: isLoading ? const CircularProgressIndicator(color: Colors.white) : const Text('Set as Wallpaper', style: TextStyle(fontSize: 18)),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
