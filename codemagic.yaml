@@ -1,0 +1,13 @@
+workflows:
+  wallify-4k:
+    name: Wallify 4K
+    instance_type: mac_mini_m1
+    environment:
+      flutter: stable
+    scripts:
+      - flutter pub get
+      - flutter build apk --release
+      - flutter build appbundle --release
+    artifacts:
+      - build/**/outputs/**/*.apk
+      - build/**/outputs/**/*.aab
