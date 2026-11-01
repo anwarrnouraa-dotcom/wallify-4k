@@ -38,43 +38,27 @@ class HomeScreen extends StatelessWidget {
       appBar: AppBar(title: const Text('Wallify 4K'), centerTitle: true),
       body: Padding(
         padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Choose a category', style: TextStyle(fontSize: 18, color: Colors.white70)),
-            const SizedBox(height: 16),
-            Expanded(
-              child: GridView.builder(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2, crossAxisSpacing: 12, mainAxisSpacing: 12),
-                itemCount: categories.length,
-                itemBuilder: (context, index) {
-                  final cat = categories[index];
-                  return GestureDetector(
-                    onTap: () {
-                      Navigator.push(context, MaterialPageRoute(builder: (_) => CategoryScreen(category: cat)));
-                    },
-                    child: Container(
-                      decoration: BoxDecoration(color: const Color(0xFF1E1E2F), borderRadius: BorderRadius.circular(20)),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(20),
-                            decoration: BoxDecoration(color: cat['color'], borderRadius: BorderRadius.circular(16)),
-                            child: Icon(cat['icon'], size: 40, color: Colors.white),
-                          ),
-                          const SizedBox(height: 12),
-                          Text(cat['name'], style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                          const SizedBox(height: 4),
-                          Text('${cat['count']} images', style: const TextStyle(color: Colors.white54)),
-                        ],
-                      ),
-                    ),
-                  );
-                },
+        child: GridView.builder(
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2, crossAxisSpacing: 12, mainAxisSpacing: 12),
+          itemCount: categories.length,
+          itemBuilder: (context, index) {
+            final cat = categories[index];
+            return GestureDetector(
+              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => CategoryScreen(category: cat))),
+              child: Container(
+                decoration: BoxDecoration(color: const Color(0xFF1E1E2F), borderRadius: BorderRadius.circular(20)),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(padding: const EdgeInsets.all(20), decoration: BoxDecoration(color: cat['color'], borderRadius: BorderRadius.circular(16)), child: Icon(cat['icon'], size: 40, color: Colors.white)),
+                    const SizedBox(height: 12),
+                    Text(cat['name'], style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                    Text('${cat['count']} images', style: const TextStyle(color: Colors.white54)),
+                  ],
+                ),
               ),
-            ),
-          ],
+            );
+          },
         ),
       ),
     );
@@ -102,13 +86,8 @@ class CategoryScreen extends StatelessWidget {
         itemCount: images.length,
         itemBuilder: (context, index) {
           return GestureDetector(
-            onTap: () {
-              Navigator.push(context, MaterialPageRoute(builder: (_) => ViewScreen(imagePath: images[index])));
-            },
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(15),
-              child: Image.asset(images[index], fit: BoxFit.cover),
-            ),
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ViewScreen(imagePath: images[index]))),
+            child: ClipRRect(borderRadius: BorderRadius.circular(15), child: Image.asset(images[index], fit: BoxFit.cover)),
           );
         },
       ),
@@ -119,7 +98,6 @@ class CategoryScreen extends StatelessWidget {
 class ViewScreen extends StatefulWidget {
   final String imagePath;
   const ViewScreen({super.key, required this.imagePath});
-
   @override
   State<ViewScreen> createState() => _ViewScreenState();
 }
@@ -135,15 +113,14 @@ class _ViewScreenState extends State<ViewScreen> {
       final file = await File('${tempDir.path}/temp_wallpaper.jpg').create();
       await file.writeAsBytes(byteData.buffer.asUint8List());
 
-      bool result = await AsyncWallpaper.setWallpaperFromFile(
+      var result = await AsyncWallpaper.setWallpaperFromFile(
         filePath: file.path,
         wallpaperLocation: AsyncWallpaper.HOME_SCREEN,
+        goToHome: false,
       );
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(result ? 'Wallpaper Set Successfully!' : 'Failed to set wallpaper')),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(result.toString())));
       }
     } catch (e) {
       if (mounted) {
@@ -159,21 +136,8 @@ class _ViewScreenState extends State<ViewScreen> {
       body: Stack(
         children: [
           SizedBox.expand(child: Image.asset(widget.imagePath, fit: BoxFit.cover)),
-          Positioned(
-            top: 40, left: 10,
-            child: CircleAvatar(
-              backgroundColor: Colors.black54,
-              child: IconButton(icon: const Icon(Icons.arrow_back, color: Colors.white), onPressed: () => Navigator.pop(context)),
-            ),
-          ),
-          Positioned(
-            bottom: 30, left: 20, right: 20,
-            child: ElevatedButton(
-              onPressed: isLoading ? null : setWallpaper,
-              style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16), backgroundColor: Colors.blue),
-              child: isLoading ? const CircularProgressIndicator(color: Colors.white) : const Text('Set as Wallpaper', style: TextStyle(fontSize: 18)),
-            ),
-          ),
+          Positioned(top: 40, left: 10, child: CircleAvatar(backgroundColor: Colors.black54, child: IconButton(icon: const Icon(Icons.arrow_back, color: Colors.white), onPressed: () => Navigator.pop(context)))),
+          Positioned(bottom: 30, left: 20, right: 20, child: ElevatedButton(onPressed: isLoading ? null : setWallpaper, style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16), backgroundColor: Colors.blue), child: isLoading ? const CircularProgressIndicator(color: Colors.white) : const Text('Set as Wallpaper', style: TextStyle(fontSize: 18)))),
         ],
       ),
     );
