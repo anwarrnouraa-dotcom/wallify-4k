@@ -1,18 +1,22 @@
 name: wallify_4k
-description: Wallify 4K - 45 Images
+description: Wallify 4K Wallpapers
 publish_to: 'none'
 version: 1.0.0+1
+
 environment:
   sdk: ">=3.0.0 <4.0.0"
+
 dependencies:
   flutter:
     sdk: flutter
-  wallpaper_manager_flutter: ^1.0.2
+  async_wallpaper: ^1.0.3
   path_provider: ^2.1.2
   permission_handler: ^11.3.0
+
 flutter:
   uses-material-design: true
   assets:
+    - assets/
     - assets/nature/
     - assets/animals/
     - assets/persons/
