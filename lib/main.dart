@@ -113,10 +113,12 @@ class _ViewScreenState extends State<ViewScreen> {
       final file = await File('${tempDir.path}/temp_wallpaper.jpg').create();
       await file.writeAsBytes(byteData.buffer.asUint8List());
 
-      var result = await AsyncWallpaper.setWallpaperFromFile(
-        filePath: file.path,
-        wallpaperLocation: AsyncWallpaper.HOME_SCREEN,
-        goToHome: false,
+      final result = await AsyncWallpaper.setWallpaper(
+        request: WallpaperRequest(
+          target: WallpaperTarget.home,
+          sourceType: WallpaperSourceType.file,
+          source: file.path,
+        ),
       );
 
       if (mounted) {
