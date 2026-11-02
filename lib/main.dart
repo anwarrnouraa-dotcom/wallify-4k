@@ -65,21 +65,41 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
-class CategoryScreen extends StatelessWidget {
+class CategoryScreen extends StatefulWidget {
   final Map<String, dynamic> category;
   const CategoryScreen({super.key, required this.category});
+  @override
+  State<CategoryScreen> createState() => _CategoryScreenState();
+}
 
-  List<String> getImages() {
-    int count = category['count'];
-    String folder = category['folder'];
-    return List.generate(count, (i) => 'assets/$folder/${i+1}.jpg');
+class _CategoryScreenState extends State<CategoryScreen> {
+  List<String> images = [];
+  bool loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    loadImages();
+  }
+
+  Future<void> loadImages() async {
+    final manifestContent = await rootBundle.loadString('AssetManifest.json');
+    final Map<String, dynamic> manifestMap = Map<String, dynamic>.from(
+      const JsonDecoder().convert(manifestContent) as Map,
+    );
+    final folder = widget.category['folder'];
+    final filtered = manifestMap.keys.where((k) => k.startsWith('assets/$folder/')).toList();
+    setState(() {
+      images = filtered;
+      loading = false;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    final images = getImages();
+    if (loading) return Scaffold(appBar: AppBar(title: Text(widget.category['name'])), body: const Center(child: CircularProgressIndicator()));
     return Scaffold(
-      appBar: AppBar(title: Text(category['name'])),
+      appBar: AppBar(title: Text(widget.category['name'])),
       body: GridView.builder(
         padding: const EdgeInsets.all(10),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2, crossAxisSpacing: 10, mainAxisSpacing: 10, childAspectRatio: 0.7),
@@ -104,7 +124,6 @@ class ViewScreen extends StatefulWidget {
 
 class _ViewScreenState extends State<ViewScreen> {
   bool isLoading = false;
-
   Future<void> setWallpaper() async {
     setState(() => isLoading = true);
     try {
@@ -112,22 +131,12 @@ class _ViewScreenState extends State<ViewScreen> {
       final tempDir = await getTemporaryDirectory();
       final file = await File('${tempDir.path}/temp_wallpaper.jpg').create();
       await file.writeAsBytes(byteData.buffer.asUint8List());
-
       final result = await AsyncWallpaper.setWallpaper(
-        WallpaperRequest(
-          target: WallpaperTarget.home,
-          sourceType: WallpaperSourceType.file,
-          source: file.path,
-        ),
+        WallpaperRequest(target: WallpaperTarget.home, sourceType: WallpaperSourceType.file, source: file.path),
       );
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(result.toString())));
-      }
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(result.toString())));
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
-      }
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
     }
     setState(() => isLoading = false);
   }
