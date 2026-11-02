@@ -114,7 +114,7 @@ class _ViewScreenState extends State<ViewScreen> {
       await file.writeAsBytes(byteData.buffer.asUint8List());
 
       final result = await AsyncWallpaper.setWallpaper(
-        request: WallpaperRequest(
+        WallpaperRequest(
           target: WallpaperTarget.home,
           sourceType: WallpaperSourceType.file,
           source: file.path,
