@@ -29,25 +29,28 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Wallify 4K - Cars'), centerTitle: true),
+      appBar: AppBar(title: const Text('Wallify 4K'), centerTitle: true),
       body: GridView.builder(
         padding: const EdgeInsets.all(12),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
           crossAxisSpacing: 12,
           mainAxisSpacing: 12,
-          childAspectRatio: 0.6,
+          childAspectRatio: 0.7,
         ),
         itemCount: cars.length,
         itemBuilder: (context, index) {
-          return GestureDetector(
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => FullScreen(image: cars[index])),
-            ),
+          return InkWell(
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (c) => FullScreen(image: cars[index])),
+              );
+            },
             child: ClipRRect(
               borderRadius: BorderRadius.circular(16),
-              child: Image.asset(cars[index], fit: BoxFit.cover),
+              child: Image.asset(cars[index], fit: BoxFit.cover,
+                errorBuilder: (c,e,s) => Container(color: Colors.grey, child: Icon(Icons.error)),
+              ),
             ),
           );
         },
@@ -63,18 +66,11 @@ class FullScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      body: Stack(
-        children: [
-          Center(child: Image.asset(image)),
-          Positioned(
-            top: 40,
-            left: 20,
-            child: IconButton(
-              icon: const Icon(Icons.close, color: Colors.white, size: 30),
-              onPressed: () => Navigator.pop(context),
-            ),
-          ),
-        ],
+      appBar: AppBar(backgroundColor: Colors.black, leading: IconButton(icon: Icon(Icons.arrow_back), onPressed: ()=> Navigator.pop(context))),
+      body: Center(
+        child: InteractiveViewer(
+          child: Image.asset(image, fit: BoxFit.contain),
+        ),
       ),
     );
   }
